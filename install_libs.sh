@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 echo "Iniciando instalación y configuración..."
 
-sudo apt-get update
-sudo apt install zip unzip python3-venv python3-pip python3-full -y
+# Verificación de versión de Ubuntu
+UBUNTU_VERSION=$(grep VERSION_ID /etc/os-release | cut -d '"' -f2)
 
+if [ "$UBUNTU_VERSION" != "24.04" ]; then
+    echo "❌ Error: Este script solo puede ejecutarse en Ubuntu 24.04 (detectado $UBUNTU_VERSION)."
+    exit 1
+fi
+
+# Actualizar paquetes e instalar dependencias necesarias
+sudo apt-get update
+sudo apt-get install -y zip unzip python3-venv python3-pip
+
+# Carpeta base = directorio actual
 BASE="$PWD"
 
 # Ruta del entorno virtual
@@ -13,22 +23,26 @@ RUTA_ENV="$BASE/env"
 if [ -d "$RUTA_ENV" ]; then
     echo "📂 Activando entorno existente en $RUTA_ENV..."
     source "$RUTA_ENV/bin/activate"
-    pip install --upgrade pip --break-system-packages
-    pip install pandas numpy seaborn scikit-learn matplotlib --break-system-packages
+    pip install --upgrade pip
+    pip install pandas numpy seaborn scikit-learn matplotlib
 else
     echo "📂 Creando entorno en $RUTA_ENV..."
     python3 -m venv "$RUTA_ENV"
     source "$RUTA_ENV/bin/activate"
-    pip install --upgrade pip --break-system-packages
-    pip install pandas numpy seaborn scikit-learn matplotlib --break-system-packages
+    pip install --upgrade pip
+    pip install pandas numpy seaborn scikit-learn matplotlib
 fi
 
-
-if [ ! -f train.csv ]; then
-    unzip train.csv.zip;
+# Descomprimir dataset si existe el zip pero no el csv
+if [ -f "$BASE/train.csv.zip" ] && [ ! -f "$BASE/train.csv" ]; then
+    echo "📦 Descomprimiendo train.csv.zip..."
+    unzip "$BASE/train.csv.zip" -d "$BASE"
 fi
 
 # Ejecutar main.py automáticamente
-echo "🚀 Ejecutando main.py..."
-cd "$BASE"
-python3 main.py
+if [ -f "$BASE/main.py" ]; then
+    echo "🚀 Ejecutando main.py..."
+    python3 "$BASE/main.py"
+else
+    echo "⚠️ No se encontró main.py en $BASE"
+fi
