@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 echo "Iniciando instalación y configuración..."
 
+sudo apt-get update
 sudo apt install zip unzip python3-venv python3-pip python3-full -y
 
 BASE="$PWD"
